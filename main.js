@@ -9,7 +9,7 @@ const posts = [];
 let nextId = 1;
 
 function sendResponse(response,{status = statusOk,headers = {},body = null}){
-    console.log('status-' + status);
+    //console.log('status-' + status);
     Object.entries(headers).forEach(function([key,value]){
         response.setHeader(key,value);
     });
@@ -35,7 +35,7 @@ methods.set('/posts.get',function({response}){
 methods.set('/posts.getById',function({response,searchParams}){
     
     const content = Number(searchParams.get('id'));
-    console.log(content);
+
     if (Number.isNaN(content)){
         sendResponse(response,{
             status: statusBadRequest,
@@ -62,8 +62,6 @@ methods.set('/posts.post',function({response,searchParams}){
         return;
     }
 
-
-
     const content = searchParams.get('content');
 
     const post = {
@@ -75,8 +73,43 @@ methods.set('/posts.post',function({response,searchParams}){
     posts.unshift(post);
     sendJson(response,post);
 });
-methods.set('/posts.edit',function(){});
-methods.set('/posts.edelete',function(){});
+methods.set('/posts.edit',function({response,searchParams}){
+    if (!searchParams.has('id') || !searchParams.has('content')){
+        sendResponse(response,{
+            status: statusBadRequest,
+            body:'bad request',
+        });
+        return;
+    }
+
+    const id = Number(searchParams.get('id'));
+    const content = searchParams.get('content');
+    
+    if (Number.isNaN(id) || !content.trim()){
+        sendResponse(response,{
+            status: statusBadRequest,
+            body:'bad request',
+        });
+        return;
+    }
+
+    const postId = posts.findIndex(item => item.id === id);
+    
+    if (postId === -1){
+        sendResponse(response,{
+            status: statusNotFound,
+            body:'page not found'
+        });
+        return;
+    }
+
+    posts[postId].content = content;
+    const post = posts[postId];
+    sendJson(response,post);
+});
+methods.set('/posts.delete',function(){
+
+});
 
 const server = http.createServer(function(request,response){
     const {pathname,searchParams} = new URL(request.url,`http://${request.headers.host}`);
