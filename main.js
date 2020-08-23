@@ -107,8 +107,36 @@ methods.set('/posts.edit',function({response,searchParams}){
     const post = posts[postId];
     sendJson(response,post);
 });
-methods.set('/posts.delete',function(){
+methods.set('/posts.delete',function({response,searchParams}){
+    if (!searchParams.has('id')){
+        sendResponse(response,{
+            status: statusBadRequest,
+            body:'bad request',
+        });
+        return;
+    }
+    const id = Number(searchParams.get('id'));
+    if (Number.isNaN(id)){
+        sendResponse(response,{
+            status: statusBadRequest,
+            body:'bad request',
+        });
+        return;
+    }
+    const postId = posts.findIndex(item => item.id === id);
 
+    if (postId === -1){
+        sendResponse(response,{
+            status: statusNotFound,
+            body:'page not found'
+        });
+        return;
+    }
+
+    const post = posts[postId];
+    posts.splice(postId,1);
+    
+    sendJson(response,post);
 });
 
 const server = http.createServer(function(request,response){
