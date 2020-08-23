@@ -30,7 +30,8 @@ function sendJson(response,body){
 
 const methods = new Map;
 methods.set('/posts.get',function({response}){
-    sendJson(response,posts);
+    const filteredPost = posts.filter(post => !post.removed);
+    sendJson(response,filteredPost);
 });
 methods.set('/posts.getById',function({response,searchParams}){
     
@@ -44,7 +45,7 @@ methods.set('/posts.getById',function({response,searchParams}){
         return;
     }
 
-    const post = posts.find(item => item.id === content);
+    const post = posts.find(item => item.id === content && !item.removed);
     if (post === undefined){
         sendResponse(response,{
             status: statusNotFound,
@@ -68,6 +69,7 @@ methods.set('/posts.post',function({response,searchParams}){
         id : nextId++,
         content: content,
         created: Date.now(),
+        removed: false,
     };
 
     posts.unshift(post);
@@ -90,7 +92,7 @@ methods.set('/posts.edit',function({response,searchParams}){
             status: statusBadRequest,
             body:'bad request',
         });
-        return;
+        return; 
     }
 
     const postId = posts.findIndex(item => item.id === id);
@@ -123,7 +125,7 @@ methods.set('/posts.delete',function({response,searchParams}){
         });
         return;
     }
-    const postId = posts.findIndex(item => item.id === id);
+    const postId = posts.findIndex(item => item.id === id && !item.removed);
 
     if (postId === -1){
         sendResponse(response,{
@@ -133,9 +135,9 @@ methods.set('/posts.delete',function({response,searchParams}){
         return;
     }
 
-    const post = posts[postId];
-    posts.splice(postId,1);
-    
+
+    posts[postId].removed = true;
+    const post = posts[postId];    
     sendJson(response,post);
 });
 
