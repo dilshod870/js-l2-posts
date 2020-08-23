@@ -140,6 +140,38 @@ methods.set('/posts.delete',function({response,searchParams}){
     const post = posts[postId];    
     sendJson(response,post);
 });
+methods.set('/posts.restore',function({response,searchParams}){
+    if (!searchParams.has('id')){
+        sendResponse(response,{
+            status: statusBadRequest,
+            body:'bad request',
+        });
+        return;
+    }
+    const id = Number(searchParams.get('id'));
+    if (Number.isNaN(id)){
+        sendResponse(response,{
+            status: statusBadRequest,
+            body:'bad request',
+        });
+        return;
+    }
+    const postId = posts.findIndex(item => item.id === id && item.removed);
+
+    if (postId === -1){
+        sendResponse(response,{
+            status: statusNotFound,
+            body:'page not found'
+        });
+        return;
+    }
+
+
+    posts[postId].removed = false;
+    const post = posts[postId];    
+    sendJson(response,post);
+});
+
 
 const server = http.createServer(function(request,response){
     const {pathname,searchParams} = new URL(request.url,`http://${request.headers.host}`);
